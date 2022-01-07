@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Manage Contacts</title>
+    <link rel="stylesheet" type="text/css" th:href="@{/webjars/bootstrap/css/bootstrap.min.css}">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+</head>
+<body>
+<div class="container-fluid text-center">
+    <div><h2>Manage Contacts</h2></div>
+    <div class="m-2"><h3><a th:href="@{/contacts/new}">Add New Contact</a></h3></div>
+    <div>
+        <input class="m-3" type="text" id="searchInput" onkeyup="searchContact()" placeholder="Search for contact..">
+        <table id="contactstable" class="table table-bordered">
+            <thead class="thead-dark">
+            <th>ID</th>
+            <th>Picture</th>
+            <th>Name</th>
+            <th>Address</th>
+            <th></th>
+            <th></th>
+            </thead>
+            <tbody>
+                <th:block th:each="contact : ${contactList}">
+                    <tr>
+                        <td>[[${contact.id}]]</td>
+                        <td><img width="50" height="50" th:src="${'data:image/jpg;base64,' + contact.picture}"></td>
+                        <td>[[${contact.name}]]</td>
+                        <td>[[${contact.address}]]</td>
+                         <td><a class="h4 mr-3" th:href="@{'/contacts/edit/' + ${contact.id}}">Edit</a></td>
+                        <td><a class="h4" th:href="@{'/contacts/delete/' + ${contact.id}}">Delete</a></td>
+                    </tr>
+                </th:block>
+            </tbody>
+        </table>
+        <div><button class="btn btn-success" id="export-button">Export Table to CSV File</button></div>
+    </div>
+</div>
+<script type="text/javascript">
+    function searchContact() {
+        var input = document.getElementById("searchInput");
+        var filter = input.value.toLowerCase();
+        var table = document.getElementById("contactstable");
+        var tr = document.getElementsByTagName("tr");
+
+        for (var i = 0; i < tr.length; i++) {
+            var td = tr[i].getElementsByTagName("td")[2];
+            if (td) {
+                txtValue = td.textContent || td.innerText;
+                if (txtValue.toLowerCase().indexOf(filter) > -1) {
+                    tr[i].style.display = "";
+                } else {
+                    tr[i].style.display = "none";
+                }
+            }
+        }
+    }
+
+    function exportCSV(html, filename) {
+        var data = [];
+        var rows = document.querySelectorAll("table tr");
+
+        for (var i = 0; i < rows.length; i++) {
+            var row = [], cols = rows[i].querySelectorAll("td, th");
+
+            for (var j = 0; j < cols.length - 2; j++) {
+                row.push(cols[j].innerText);
+            }
+
+            data.push(row.join(","));
+        }
+
+        downloadCSVFile(data.join("\n"), filename);
+    }
+
+    function downloadCSVFile(csv, filename) {
+        var csv_file, download_link;
+
+        csv_file = new Blob([csv], {type: "text/csv"});
+
+        download_link = document.createElement("a");
+
+        download_link.download = filename;
+
+        download_link.href = window.URL.createObjectURL(csv_file);
+
+        download_link.style.display = "none";
+
+        document.body.appendChild(download_link);
+
+        download_link.click();
+    }
+
+    document.getElementById("export-button").addEventListener("click", function () {
+        var html = document.querySelector("table").outerHTML;
+        exportCSV(html, "contacts.csv");
+    });
+
+
+</script>
+
+</body>
+</html>
